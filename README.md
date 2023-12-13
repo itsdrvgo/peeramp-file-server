@@ -48,22 +48,131 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
 
 ## API
 
-### POST /api/resume/process
+### POST /api/pdfs/compress
 
 -   **Request**
 
     `**Content-Type: multipart/form-data**`
 
     ```json
-    "file": File // - The file to be processed
-    "userId": string // - The user id of the user who uploaded the file
+    "file": "File" // - The file to be compressed
+    "uploaderId": "string" // - The user id of the user who uploaded the file
     ```
 
 -   **Response**
 
     ```json
     {
-        "message": string // - The message of the response
+        "message": "string", // - The message of the response
+        "data": {
+            "files": {
+                "data": {
+                    "key": "string", // - The key of the file
+                    "url": "string", // - The url of the file
+                    "size": "number", // - The size of the file
+                    "name": "string", // - The name of the file
+                },
+                "error": {
+                    "code": "string" // - The error code
+                    "message": "string" // - The error message
+                    "data": "any" // - The error data
+                } | null
+            }[], // - The files that were compressed
+            "uploaderId": "string", // - The id of the user who uploaded the file
+        } | "undefined" // - The data of the response
+    }
+    ```
+
+### POST /api/pdfs/extract
+
+-   **Request**
+
+    **`Content-Type: multipart/form-data`**
+
+    ```json
+    "file": "File", // - The file to be extracted
+    "uploaderId": "string" // - The user id of the user who uploaded the file
+    ```
+
+-   **Response**
+
+    ```json
+    {
+        "message": "string", // - The message of the response
+        "data": {
+            "text": "string", // - The text extracted from the file
+            "uploaderId": "string", // - The id of the user who uploaded the file
+        } | "undefined" // - The data of the response
+    }
+    ```
+
+### POST /api/videos/compress
+
+-   **Request**
+
+    **`Content-Type: multipart/form-data`**
+
+    ```json
+    "video": "File", // - The video to be compressed
+    "uploaderId": "string" // - The user id of the user who uploaded the file
+    ```
+
+-   **Response**
+
+    ```json
+    {
+        "message": "string", // - The message of the response
+        "data": {
+            "files": {
+                "data": {
+                    "key": "string", // - The key of the file
+                    "url": "string", // - The url of the file
+                    "size": "number", // - The size of the file
+                    "name": "string", // - The name of the file
+                },
+                "error": {
+                    "code": "string" // - The error code
+                    "message": "string" // - The error message
+                    "data": "any" // - The error data
+                } | null
+            }[], // - The videos that were compressed
+            "uploaderId": "string", // - The id of the user who uploaded the file
+        } | "undefined" // - The data of the response
+    }
+    ```
+
+### POST /api/images/compress
+
+-   **Request**
+
+    **`Content-Type: multipart/form-data`**
+
+    ```json
+    "images": "File[]", // - The images to be compressed
+    "uploaderId": "string" // - The user id of the user who uploaded the file
+    ```
+
+-   **Response**
+
+    ```json
+    {
+        "message": "string", // - The message of the response
+        "data": {
+            "files": {
+                "data": {
+                    "key": "string", // - The key of the file
+                    "url": "string", // - The url of the file
+                    "size": "number", // - The size of the file
+                    "name": "string", // - The name of the file
+                },
+                "error": {
+                    "code": "string" // - The error code
+                    "message": "string" // - The error message
+                    "data": "any" // - The error data
+                } | null
+            }[], // - The images that were compressed
+            "uploaderId": "string", // - The id of the user who uploaded the file
+        } | "undefined" // - The data of the response
     }
     ```
 
