@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-export const fileUploadValidationSchema = z.object({
-    userId: z.string(),
+export const uploaderSchema = z.object({
+    uploaderId: z.string(),
 });
 
-export type FileUploadValidationSchema = z.infer<
-    typeof fileUploadValidationSchema
->;
+export type UploaderValidator = z.infer<typeof uploaderSchema>;

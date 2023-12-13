@@ -1,11 +1,19 @@
 import cors from "cors";
 import express from "express";
+import ratelimit from "express-rate-limit";
 import { ZodError } from "zod";
 import { registerApi } from "../routers";
 import { initiateErrorHandler } from "./error";
 
 export function createApp() {
     const app = express();
+
+    app.use(
+        ratelimit({
+            windowMs: 30 * 60 * 1000,
+            max: 30,
+        })
+    );
 
     app.use(express.json());
     app.use(cors());
@@ -30,7 +38,7 @@ export function generateRandomId(length?: number) {
     return id;
 }
 
-export function handleError(err: unknown): {
+export function sanitizeError(err: unknown): {
     code: number;
     message: string;
 } {
