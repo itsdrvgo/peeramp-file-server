@@ -72,19 +72,12 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
     {
         "message": "string", // - The message of the response
         "data": {
-            "files": {
-                "data": {
-                    "key": "string", // - The key of the file
-                    "url": "string", // - The url of the file
-                    "size": "number", // - The size of the file
-                    "name": "string", // - The name of the file
-                },
-                "error": {
-                    "code": "string" // - The error code
-                    "message": "string" // - The error message
-                    "data": "any" // - The error data
-                } | null
-            }[], // - The files that were compressed
+            "file": {
+                "key": "string", // - The key of the file
+                "url": "string", // - The url of the file
+                "size": "number", // - The size of the file
+                "name": "string", // - The name of the file
+            }, // - The file that was compressed
             "uploaderId": "string", // - The id of the user who uploaded the file
         } | "undefined" // - The data of the response
     }
@@ -130,19 +123,12 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
     {
         "message": "string", // - The message of the response
         "data": {
-            "files": {
-                "data": {
-                    "key": "string", // - The key of the file
-                    "url": "string", // - The url of the file
-                    "size": "number", // - The size of the file
-                    "name": "string", // - The name of the file
-                },
-                "error": {
-                    "code": "string" // - The error code
-                    "message": "string" // - The error message
-                    "data": "any" // - The error data
-                } | null
-            }[], // - The videos that were compressed
+            "file": {
+                "key": "string", // - The key of the file
+                "url": "string", // - The url of the file
+                "size": "number", // - The size of the file
+                "name": "string", // - The name of the file
+            }, // - The video that was compressed
             "uploaderId": "string", // - The id of the user who uploaded the file
         } | "undefined" // - The data of the response
     }
@@ -166,22 +152,28 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
         "message": "string", // - The message of the response
         "data": {
             "files": {
-                "data": {
-                    "key": "string", // - The key of the file
-                    "url": "string", // - The url of the file
-                    "size": "number", // - The size of the file
-                    "name": "string", // - The name of the file
-                },
-                "error": {
-                    "code": "string" // - The error code
-                    "message": "string" // - The error message
-                    "data": "any" // - The error data
-                } | null
+                "key": "string", // - The key of the file
+                "url": "string", // - The url of the file
+                "size": "number", // - The size of the file
+                "name": "string", // - The name of the file
             }[], // - The images that were compressed
             "uploaderId": "string", // - The id of the user who uploaded the file
         } | "undefined" // - The data of the response
     }
     ```
+
+### SOCKET
+
+The server also provides a socket for the Peeramp client to interact with. The socket is used to send and receive messages between the client and the server. The socket is initialized on the `/` route (i.e. `http://localhost:3001/`). We will be changing the route to `/api/socket` in the future.
+
+-   **Message Types**
+
+    -   `image_upload_progress` - The message type for the image upload progress event.
+    -   `pdf_upload_progress` - The message type for the pdf upload progress event.
+    -   `pdf_extract_progress` - The message type for the pdf extract progress event.
+    -   `video_upload_progress` - The message type for the video upload progress event.
+
+We will be adding more message types in the future.
 
 ### Conclusion
 
