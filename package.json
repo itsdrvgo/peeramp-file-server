@@ -39,7 +39,7 @@
         "express-rate-limit": "^7.1.5",
         "fluent-ffmpeg": "^2.1.2",
         "sharp": "^0.33.0",
-        "uploadthing": "^6.0.4",
+        "uploadthing": "^6.1.0",
         "zod": "^3.22.4"
     }
 }
