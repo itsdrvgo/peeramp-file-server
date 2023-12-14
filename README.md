@@ -2,6 +2,13 @@
 
 The official file management server for the Peeramp. This server is responsible for managing, uploading, validating, converting and compressing files. It also provides a simple API for the Peeramp client to interact with.
 
+## Prerequisites
+
+-   [Node.js](https://nodejs.org/en/) - The JavaScript runtime used to run the server. `(Recommended version: >=20.10.0)`
+-   [pnpm](https://pnpm.js.org/) - The package manager used to manage the server's dependencies.
+-   [ffmpeg](https://ffmpeg.org/) - The command line tool used to convert and compress videos.
+-   [ghostscript](https://www.ghostscript.com/) - The command line tool used to convert and compress pdfs. (Windows only)
+
 ## Installation
 
 ```bash
@@ -178,4 +185,4 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
 
 ### Conclusion
 
-For more information, please refer to [PeerAmp](https://peeramp.vercel.app/).
+For more information, please refer to [PeerAmp](https://github.com/itsdrvgo/peeramp/).
