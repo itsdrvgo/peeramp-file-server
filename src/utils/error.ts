@@ -1,19 +1,13 @@
-import chalk from "chalk";
+import { logger } from "../index";
 
 export function initiateErrorHandler() {
-    console.log(chalk.cyanBright("[ ✔ ] Error handler initiated..."));
+    logger.info("Error handler initiated");
 
     process.on("uncaughtException", (err) => {
-        console.error(
-            chalk.redBright(
-                "[ ❌ ] Uncaught Exception - " + err.message + "\n" + err.stack
-            )
-        );
+        logger.error("Uncaught Exception - " + err.message + "\n" + err.stack);
     });
 
     process.on("unhandledRejection", (reason) => {
-        console.error(
-            chalk.redBright("[ ❌ ] Unhandled Rejection - " + reason)
-        );
+        logger.error("Unhandled Rejection - " + reason);
     });
 }
