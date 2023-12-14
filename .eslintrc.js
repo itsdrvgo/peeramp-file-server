@@ -19,6 +19,7 @@ module.exports = {
         semi: ["error", "always"],
         "unused-imports/no-unused-imports-ts": "warn",
         "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-explicit-any": "off",
     },
     parser: "@typescript-eslint/parser",
     parserOptions: {
