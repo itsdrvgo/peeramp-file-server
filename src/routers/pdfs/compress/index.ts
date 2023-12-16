@@ -141,7 +141,7 @@ export function pdfCompressionRouter(router: Router) {
                 res,
                 message: "OK",
                 data: {
-                    file: uploadedFiles[0].data,
+                    files: [uploadedFiles[0].data],
                     uploaderId,
                 },
             });

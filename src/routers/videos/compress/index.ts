@@ -141,7 +141,7 @@ export function videoCompressRouter(router: Router) {
                 res,
                 message: "OK",
                 data: {
-                    file: uploadedFile[0].data,
+                    files: [uploadedFile[0].data],
                     uploaderId,
                 },
             });

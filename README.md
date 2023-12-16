@@ -72,12 +72,12 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
     {
         "message": "string", // - The message of the response
         "data": {
-            "file": {
+            "files": {
                 "key": "string", // - The key of the file
                 "url": "string", // - The url of the file
                 "size": "number", // - The size of the file
                 "name": "string", // - The name of the file
-            }, // - The file that was compressed
+            }[], // - The file that was compressed
             "uploaderId": "string", // - The id of the user who uploaded the file
         } | "undefined" // - The data of the response
     }
@@ -123,12 +123,12 @@ Once initialized, the server will listen on port 3001 by default. This can be ch
     {
         "message": "string", // - The message of the response
         "data": {
-            "file": {
+            "files": {
                 "key": "string", // - The key of the file
                 "url": "string", // - The url of the file
                 "size": "number", // - The size of the file
                 "name": "string", // - The name of the file
-            }, // - The video that was compressed
+            }[], // - The video that was compressed
             "uploaderId": "string", // - The id of the user who uploaded the file
         } | "undefined" // - The data of the response
     }
