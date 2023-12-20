@@ -1,10 +1,10 @@
 import { readFileSync, unlinkSync } from "fs";
 import { Router } from "express";
 import PdfParse from "pdf-parse";
-import { io, logger } from "src";
 import { CResponse, sanitizeError } from "../../../utils";
 import { pdfUpload } from "../../../utils/uploads/pdf";
 import { uploaderSchema } from "../../../validations";
+import { logger ,io} from "../../..";
 
 export function pdfExtractRouter(router: Router) {
     router.post("/extract", pdfUpload.single("file"), async (req, res) => {
