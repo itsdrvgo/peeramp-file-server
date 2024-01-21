@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from "fs";
 import multer from "multer";
-import { generateRandomId } from "..";
+import { generateId } from "../../utils";
 
 const dir = "./uploads/video";
 
@@ -9,11 +9,11 @@ if (!existsSync(dir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: (_, __, cb) => {
         cb(null, dir);
     },
-    filename: async function (req, file, cb) {
-        cb(null, "video_" + generateRandomId());
+    filename: (_, __, cb) => {
+        cb(null, "video_" + generateId());
     },
 });
 
@@ -23,7 +23,7 @@ export const videoUpload = multer({
         fileSize: 1024 * 1024 * 1024 * 2, // 2 GB
         files: 1,
     },
-    fileFilter: function (req, file, cb) {
+    fileFilter: (_, file, cb) => {
         if (!["video/mp4", "video/mkv"].includes(file.mimetype))
             return cb(new Error("Only 'mp4', 'mkv' files are allowed"));
 

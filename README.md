@@ -8,6 +8,7 @@ The official file management server for the Peeramp. This server is responsible 
 -   [pnpm](https://pnpm.js.org/) - The package manager used to manage the server's dependencies.
 -   [ffmpeg](https://ffmpeg.org/) - The command line tool used to convert and compress videos.
 -   [ghostscript](https://www.ghostscript.com/) - The command line tool used to convert and compress pdfs. (Windows only)
+-   [Nodemon](https://nodemon.io/) - The tool used to automatically restart the server when changes are made to the source code. `(Recommended version: >=2.0.7)`
 
 ## Installation
 
@@ -172,6 +173,16 @@ The server also provides a socket for the Peeramp client to interact with. The s
     -   `pdf_upload_progress` - The message type for the pdf upload progress event.
     -   `pdf_extract_progress` - The message type for the pdf extract progress event.
     -   `video_upload_progress` - The message type for the video upload progress event.
+
+Even though the socket emits theses messages, we do not recommend using them. Instead use the Enums provided in [here](./src/config/enums.ts). Directly copy-paste the enums into your project, and emit the messages using the enums.
+
+For example, to receive the `image_upload_progress` message on the client, you would do the following:
+
+```ts
+socket.on(SOCKET_EVENT.IMAGE_UPLOAD_PROGRESS, (data) => {
+    // Do something with the data
+});
+```
 
 We will be adding more message types in the future.
 

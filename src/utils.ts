@@ -1,67 +1,66 @@
-import cors from "cors";
-import express from "express";
-import ratelimit from "express-rate-limit";
+import { init } from "@paralleldrive/cuid2";
+import { Response } from "express";
 import { ZodError } from "zod";
-import { registerApi } from "../routers";
-import { initiateErrorHandler } from "../utils/error";
-import { ResponseMessages } from "../validations/response";
+import { logger } from "./index";
+import { ResponseMessages } from "./validations/response";
+
+export const generateId = init({
+    length: 16,
+});
 
 export function wait(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function createApp() {
-    const app = express();
+export function initiateErrorHandler() {
+    logger.info("Error handler initiated");
 
-    app.use(
-        ratelimit({
-            windowMs: 30 * 60 * 1000,
-            max: 30,
-        })
-    );
+    process.on("uncaughtException", (err) => {
+        logger.error("Uncaught Exception - " + err.message + "\n" + err.stack);
+    });
 
-    app.use(express.json());
-    app.use(
-        cors({
-            origin: "*",
-        })
-    );
-    app.use(express.urlencoded({ extended: true }));
-
-    registerApi(app);
-    initiateErrorHandler();
-
-    return app;
+    process.on("unhandledRejection", (reason) => {
+        logger.error("Unhandled Rejection - " + reason);
+    });
 }
 
-export function generateRandomId(length?: number) {
-    const alphabet =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const len = length || 10;
-    let id = "";
-
-    for (let i = 0; i < len; i++) {
-        id += alphabet[Math.floor(Math.random() * alphabet.length)];
-    }
-
-    return id;
-}
-
-export function sanitizeError(err: unknown): {
-    message: string;
-} {
+export function handleError(err: unknown, res: Response) {
     if (err instanceof ZodError) {
-        return {
-            message: err.errors.map((e) => e.message).join(", "),
-        };
+        return CResponse({
+            res,
+            message: "BAD_REQUEST",
+            longMessage: sanitizeError(err),
+        });
     } else if (err instanceof Error) {
-        return {
-            message: err.message,
-        };
+        return CResponse({
+            res,
+            message: "ERROR",
+            longMessage: sanitizeError(err),
+        });
     } else {
-        return {
-            message: "Internal server error",
-        };
+        return CResponse({
+            res,
+            message: "INTERNAL_SERVER_ERROR",
+            longMessage: sanitizeError(err),
+        });
+    }
+}
+
+export function sanitizeError(err: unknown) {
+    if (err instanceof ZodError) {
+        return err.errors
+            .map((e) =>
+                e.code === "invalid_type"
+                    ? `Expected ${e.expected} but received ${
+                          e.received
+                      } at ${e.path.join(".")}`
+                    : e.message
+            )
+            .join(", ");
+    } else if (err instanceof Error) {
+        return err.message;
+    } else {
+        return "Unknown error";
     }
 }
 
@@ -71,7 +70,7 @@ export function CResponse<T>({
     longMessage,
     data,
 }: {
-    res: express.Response;
+    res: Response;
     message: ResponseMessages;
     longMessage?: string;
     data?: T;

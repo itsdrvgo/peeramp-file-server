@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from "fs";
 import multer from "multer";
-import { generateRandomId } from "..";
+import { generateId } from "../../utils";
 
 const dir = "./uploads/pdf";
 
@@ -9,11 +9,11 @@ if (!existsSync(dir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: (_, __, cb) => {
         cb(null, dir);
     },
-    filename: async function (req, file, cb) {
-        cb(null, "file_" + generateRandomId());
+    filename: (_, __, cb) => {
+        cb(null, "file_" + generateId());
     },
 });
 
@@ -23,7 +23,7 @@ export const pdfUpload = multer({
         files: 1,
         fileSize: 1024 * 1024 * 10, // 10 MB
     },
-    fileFilter: function (req, file, cb) {
+    fileFilter: (_, file, cb) => {
         if (file.mimetype !== "application/pdf")
             return cb(new Error("Only 'pdf' files are allowed"));
 

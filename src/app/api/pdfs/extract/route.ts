@@ -1,13 +1,15 @@
 import { readFileSync, unlinkSync } from "fs";
-import { Router } from "express";
-import PdfParse from "pdf-parse";
-import { CResponse, sanitizeError } from "../../../utils";
-import { pdfUpload } from "../../../utils/uploads/pdf";
-import { uploaderSchema } from "../../../validations";
-import { logger ,io} from "../../..";
+import { Request, Response } from "express";
+import pdfParse from "pdf-parse";
+import { io, logger } from "../../../..";
+import { SOCKET_EVENTS } from "../../../../config/enums";
+import { pdfUpload } from "../../../../config/uploads/pdf";
+import { CResponse, handleError } from "../../../../utils";
+import { uploaderSchema } from "../../../../validations";
 
-export function pdfExtractRouter(router: Router) {
-    router.post("/extract", pdfUpload.single("file"), async (req, res) => {
+export const POST = [
+    pdfUpload.single("file"),
+    async (req: Request, res: Response) => {
         if (!req.file)
             return CResponse({
                 res,
@@ -23,19 +25,19 @@ export function pdfExtractRouter(router: Router) {
             const body = req.body;
             const { uploaderId } = uploaderSchema.parse(body);
 
-            io.emit("pdf_extract_progress", {
+            io.emit(SOCKET_EVENTS.PDF_EXTRACT_PROGRESS, {
                 progress: 0,
                 message: "File processing started...",
             });
 
             const dataBuffer = readFileSync(file.path);
 
-            io.emit("pdf_extract_progress", {
+            io.emit(SOCKET_EVENTS.PDF_EXTRACT_PROGRESS, {
                 progress: 20,
                 message: "Validating pdf file...",
             });
 
-            const data = await PdfParse(dataBuffer);
+            const data = await pdfParse(dataBuffer);
 
             const regex = /[a-zA-Z0-9]/;
             if (!regex.test(data.text))
@@ -45,12 +47,12 @@ export function pdfExtractRouter(router: Router) {
                     longMessage: "Invalid pdf file",
                 });
 
-            io.emit("pdf_extract_progress", {
+            io.emit(SOCKET_EVENTS.PDF_EXTRACT_PROGRESS, {
                 progress: 40,
                 message: "Extracting text from pdf file...",
             });
 
-            io.emit("pdf_extract_progress", {
+            io.emit(SOCKET_EVENTS.PDF_EXTRACT_PROGRESS, {
                 progress: 60,
                 message: "Text extracted successfully...",
             });
@@ -66,21 +68,14 @@ export function pdfExtractRouter(router: Router) {
                 },
             });
         } catch (err) {
-            io.emit("pdf_extract_progress", {
+            io.emit(SOCKET_EVENTS.PDF_EXTRACT_PROGRESS, {
                 progress: 0,
                 message: "Error occurred...",
             });
 
-            const { message } = sanitizeError(err);
-            logger.error("Error occurred: " + message);
-
-            return CResponse({
-                res,
-                message: "ERROR",
-                longMessage: message,
-            });
+            return handleError(err, res);
         } finally {
             unlinkSync(file.path);
         }
-    });
-}
+    },
+];

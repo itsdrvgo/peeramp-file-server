@@ -1,14 +1,15 @@
-import { File } from "buffer";
 import { readFileSync, unlinkSync } from "fs";
-import { Router } from "express";
+import { Request, Response } from "express";
 import ffmpeg from "fluent-ffmpeg";
-import { io, logger, utapi } from "../../..";
-import { CResponse, sanitizeError } from "../../../utils";
-import { videoUpload } from "../../../utils/uploads/video";
-import { uploaderSchema } from "../../../validations";
+import { io, logger, utapi } from "../../../..";
+import { SOCKET_EVENTS } from "../../../../config/enums";
+import { videoUpload } from "../../../../config/uploads/video";
+import { CResponse, handleError } from "../../../../utils";
+import { uploaderSchema } from "../../../../validations";
 
-export function videoCompressRouter(router: Router) {
-    router.post("/compress", videoUpload.single("video"), async (req, res) => {
+export const POST = [
+    videoUpload.single("video"),
+    async (req: Request, res: Response) => {
         if (!req.file)
             return CResponse({
                 res,
@@ -24,7 +25,7 @@ export function videoCompressRouter(router: Router) {
             const body = req.body;
             const { uploaderId } = uploaderSchema.parse(body);
 
-            io.emit("video_upload_progress", {
+            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "File processing started...",
             });
@@ -47,7 +48,7 @@ export function videoCompressRouter(router: Router) {
                             "-level 4.2", // H.264 level (default: none) | 1.0, 1, 1b, 1.1, 1.2, 1.3, 2.0, 2, 2.1, 2.2, 3.0, 3, 3.1, 3.2, 4.0, 4, 4.1, 4.2, 5.0, 5, 5.1, 5.2 (requires ffmpeg to be compiled with --enable-gpl --enable-libx264)
                         ])
                         .on("start", () => {
-                            io.emit("video_upload_progress", {
+                            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                                 progress: 20,
                                 message: "Validating video file...",
                             });
@@ -56,13 +57,13 @@ export function videoCompressRouter(router: Router) {
                             const { percent } = progress;
 
                             // 20 - 50
-                            io.emit("video_upload_progress", {
+                            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                                 progress: 20 + percent * 0.3,
                                 message: "Compressing video file...",
                             });
                         })
                         .on("error", (err) => {
-                            io.emit("video_upload_progress", {
+                            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                                 progress: 0,
                                 message: "File processing failed...",
                             });
@@ -81,7 +82,7 @@ export function videoCompressRouter(router: Router) {
                 });
             });
 
-            io.emit("video_upload_progress", {
+            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                 progress: 60,
                 message: "Conversion to file started...",
             });
@@ -99,7 +100,7 @@ export function videoCompressRouter(router: Router) {
                 }
             );
 
-            io.emit("video_upload_progress", {
+            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                 progress: 80,
                 message: "Uploading compressed file...",
             });
@@ -111,22 +112,15 @@ export function videoCompressRouter(router: Router) {
             });
 
             if (uploadedFile[0].error) {
-                const { message } = sanitizeError(uploadedFile[0].error);
-                logger.error("Error while uploading file: " + message);
-
-                io.emit("video_upload_progress", {
+                io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                     progress: 0,
                     message: "Error while uploading file...",
                 });
 
-                return CResponse({
-                    res,
-                    message: "ERROR",
-                    longMessage: message,
-                });
+                return handleError(uploadedFile[0].error, res);
             }
 
-            io.emit("video_upload_progress", {
+            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                 progress: 100,
                 message: "File uploaded successfully...",
             });
@@ -146,21 +140,14 @@ export function videoCompressRouter(router: Router) {
                 },
             });
         } catch (err) {
-            io.emit("video_upload_progress", {
+            io.emit(SOCKET_EVENTS.VIDEO_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "Error while compressing file...",
             });
 
-            const { message } = sanitizeError(err);
-            logger.error("Error while compressing file: " + message);
-
-            return CResponse({
-                res,
-                message: "ERROR",
-                longMessage: message,
-            });
+            return handleError(err, res);
         } finally {
             unlinkSync(video.path);
         }
-    });
-}
+    },
+];

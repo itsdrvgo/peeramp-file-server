@@ -1,38 +1,44 @@
-import http from "http";
+import { createServer } from "http";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 import { UTApi } from "uploadthing/server";
-import { Logger } from "./classes/logger";
-import { createApp } from "./utils";
+import { createApp } from "./app";
+import { SOCKET_EVENTS } from "./config/enums";
+import { Logger } from "./config/logger";
+
+const DEFAULT_PORT = 3001;
 
 dotenv.config();
 
-export const logger = new Logger();
-export const utapi = new UTApi();
-
+const logger = new Logger();
+const utapi = new UTApi();
 const app = createApp();
 
-const server = http.createServer(app);
-export const io = new Server(server, {
+const port = process.env.PORT ?? DEFAULT_PORT;
+
+const server = createServer(app);
+const io = new Server(server, {
     cors: {
         origin: "*",
     },
 });
 
-io.on("connection", (socket) => {
+io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     logger.info("Socket connected: " + socket.id);
-    logger.info("Current sockets: " + io.sockets.sockets.size);
+    logger.info("Total sockets: " + io.sockets.sockets.size);
 
-    socket.on("disconnect", () => {
+    socket.on(SOCKET_EVENTS.DISCONNECT, () => {
         logger.info("Socket disconnected: " + socket.id);
-        logger.info("Current sockets: " + io.sockets.sockets.size);
+        logger.info("Total sockets: " + io.sockets.sockets.size);
     });
 
-    socket.on("error", (err) => {
+    socket.on(SOCKET_EVENTS.ERROR, (err) => {
         logger.error("Socket error: " + err.message);
     });
 });
 
-server.listen(process.env.PORT, () => {
-    logger.info("File server started on port " + process.env.PORT);
+server.listen(port, () => {
+    logger.info("Server started on port " + port);
 });
+
+export { app, logger, utapi, io };

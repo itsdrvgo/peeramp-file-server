@@ -1,14 +1,15 @@
-import { File } from "buffer";
 import { readFileSync, unlinkSync } from "fs";
-import { Router } from "express";
+import { Request, Response } from "express";
 import sharp from "sharp";
-import { io, logger, utapi } from "../../..";
-import { CResponse, sanitizeError } from "../../../utils";
-import { imageUpload } from "../../../utils/uploads/image";
-import { uploaderSchema } from "../../../validations";
+import { io, logger, utapi } from "../../../..";
+import { SOCKET_EVENTS } from "../../../../config/enums";
+import { imageUpload } from "../../../../config/uploads/image";
+import { CResponse, handleError } from "../../../../utils";
+import { uploaderSchema } from "../../../../validations";
 
-export function imageCompressRouter(router: Router) {
-    router.post("/compress", imageUpload.array("images"), async (req, res) => {
+export const POST = [
+    imageUpload.array("images"),
+    async (req: Request, res: Response) => {
         if (!req.files || !req.files.length)
             return CResponse({
                 res,
@@ -29,7 +30,7 @@ export function imageCompressRouter(router: Router) {
             const body = req.body;
             const { uploaderId } = uploaderSchema.parse(body);
 
-            io.emit("image_upload_progress", {
+            io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "File processing started...",
             });
@@ -57,14 +58,14 @@ export function imageCompressRouter(router: Router) {
 
                     progress += 40 / images.length;
 
-                    io.emit("image_upload_progress", {
+                    io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                         progress,
                         message: "Compressing image " + (index + 1),
                     });
                 })
             );
 
-            io.emit("image_upload_progress", {
+            io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                 progress: 40,
                 message: "Starting conversion to file...",
             });
@@ -86,14 +87,14 @@ export function imageCompressRouter(router: Router) {
 
                     progress += 40 / images.length;
 
-                    io.emit("image_upload_progress", {
+                    io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                         progress,
                         message: "Converted image " + (index + 1) + " to file",
                     });
                 })
             );
 
-            io.emit("image_upload_progress", {
+            io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                 progress: 80,
                 message: "Uploading files...",
             });
@@ -106,19 +107,12 @@ export function imageCompressRouter(router: Router) {
 
             uploadedFiles.forEach((uploadedFile) => {
                 if (uploadedFile.error) {
-                    const { message } = sanitizeError(uploadedFile.error);
-                    logger.error("Error while uploading file: " + message);
-
-                    io.emit("image_upload_progress", {
+                    io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                         progress: 0,
                         message: "Error while uploading file...",
                     });
 
-                    return CResponse({
-                        res,
-                        message: "ERROR",
-                        longMessage: message,
-                    });
+                    return handleError(uploadedFile.error, res);
                 }
             });
 
@@ -130,7 +124,7 @@ export function imageCompressRouter(router: Router) {
                 })
             );
 
-            io.emit("image_upload_progress", {
+            io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                 progress: 100,
                 message: "File uploaded successfully...",
             });
@@ -144,17 +138,12 @@ export function imageCompressRouter(router: Router) {
                 },
             });
         } catch (err) {
-            io.emit("image_upload_progress", {
+            io.emit(SOCKET_EVENTS.IMAGE_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "Error while compressing file...",
             });
 
-            const { message } = sanitizeError(err);
-            return CResponse({
-                res,
-                message: "ERROR",
-                longMessage: message,
-            });
+            return handleError(err, res);
         } finally {
             await Promise.all(
                 images.map(async (image) => {
@@ -162,5 +151,5 @@ export function imageCompressRouter(router: Router) {
                 })
             );
         }
-    });
-}
+    },
+];

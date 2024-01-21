@@ -1,18 +1,19 @@
-import { File } from "buffer";
 import { exec as execCb } from "child_process";
 import { readFileSync, unlinkSync } from "fs";
 import { promisify } from "util";
-import { Router } from "express";
+import { Request, Response } from "express";
 import pdfParse from "pdf-parse";
-import { io, logger, utapi } from "../../..";
-import { CResponse, sanitizeError } from "../../../utils";
-import { pdfUpload } from "../../../utils/uploads/pdf";
-import { uploaderSchema } from "../../../validations";
+import { io, logger, utapi } from "../../../..";
+import { SOCKET_EVENTS } from "../../../../config/enums";
+import { pdfUpload } from "../../../../config/uploads/pdf";
+import { CResponse, handleError } from "../../../../utils";
+import { uploaderSchema } from "../../../../validations";
 
 const exec = promisify(execCb);
 
-export function pdfCompressionRouter(router: Router) {
-    router.post("/compress", pdfUpload.single("file"), async (req, res) => {
+export const POST = [
+    pdfUpload.single("file"),
+    async (req: Request, res: Response) => {
         if (!req.file)
             return CResponse({
                 res,
@@ -28,14 +29,14 @@ export function pdfCompressionRouter(router: Router) {
             const body = req.body;
             const { uploaderId } = uploaderSchema.parse(body);
 
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "File processing started...",
             });
 
             const dataBuffer = readFileSync(file.path);
 
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 20,
                 message: "Validating pdf file...",
             });
@@ -50,7 +51,7 @@ export function pdfCompressionRouter(router: Router) {
                     longMessage: "Invalid pdf file",
                 });
 
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 40,
                 message: "Compressing pdf file...",
             });
@@ -81,17 +82,10 @@ export function pdfCompressionRouter(router: Router) {
             try {
                 await exec(command);
             } catch (err) {
-                const { message } = sanitizeError(err);
-                logger.error("Error while compressing file: " + message);
-
-                return CResponse({
-                    res,
-                    message: "ERROR",
-                    longMessage: message,
-                });
+                return handleError(err, res);
             }
 
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 80,
                 message: "Uploading compressed file...",
             });
@@ -113,22 +107,15 @@ export function pdfCompressionRouter(router: Router) {
             });
 
             if (uploadedFiles[0].error) {
-                const { message } = sanitizeError(uploadedFiles[0].error);
-                logger.error("Error while uploading file: " + message);
-
-                io.emit("pdf_upload_progress", {
+                io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                     progress: 0,
                     message: "Error while uploading file...",
                 });
 
-                return CResponse({
-                    res,
-                    message: "ERROR",
-                    longMessage: message,
-                });
+                return handleError(uploadedFiles[0].error, res);
             }
 
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 100,
                 message: "File uploaded successfully...",
             });
@@ -146,21 +133,14 @@ export function pdfCompressionRouter(router: Router) {
                 },
             });
         } catch (err) {
-            io.emit("pdf_upload_progress", {
+            io.emit(SOCKET_EVENTS.PDF_UPLOAD_PROGRESS, {
                 progress: 0,
                 message: "Error while compressing file...",
             });
 
-            const { message } = sanitizeError(err);
-            logger.error("Error while compressing file: " + message);
-
-            return CResponse({
-                res,
-                message: "ERROR",
-                longMessage: message,
-            });
+            return handleError(err, res);
         } finally {
             unlinkSync(file.path);
         }
-    });
-}
+    },
+];
