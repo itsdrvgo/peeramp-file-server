@@ -2,5 +2,5 @@
     "watch": ["src"],
     "ext": "ts",
     "exec": "ts-node ./src/index.ts",
-    "ignore": ["node_modules", "build", "uploads"]
+    "ignore": ["node_modules", "dist", "uploads"]
 }

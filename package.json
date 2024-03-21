@@ -4,9 +4,10 @@
     "description": "",
     "scripts": {
         "dev": "nodemon",
-        "build": "rimraf build && tsc",
+        "build": "rimraf dist && tsc",
         "lint": "eslint --ext .ts src",
-        "start": "node --env-file=.env build/index.js"
+        "start": "node --env-file=.env dist/index.js",
+        "start:watch": "nodemon"
     },
     "type": "commonjs",
     "keywords": [],
